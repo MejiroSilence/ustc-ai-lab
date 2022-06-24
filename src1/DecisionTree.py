@@ -97,7 +97,7 @@ class DecisionTree:
         ans = []
         for feature in test_features:
             node = self
-            while node.decisionAttribute == -1:
+            while node.decisionAttribute != -1:
                 if feature[node.decisionAttribute] in node.kids:
                     node = node.kids[feature[node.decisionAttribute]]
                 else:

@@ -52,6 +52,7 @@ class MLP:
 
 
 def train(mlp: MLP, epochs, lr, inputs, labels):
+    losses = []
     for k in range(epochs):
         dw1 = np.zeros((10, 10))
         dw2 = np.zeros((8, 10))
@@ -74,7 +75,8 @@ def train(mlp: MLP, epochs, lr, inputs, labels):
             db2 += grad[5] / 100
             db3 += grad[6] / 100
             db4 += grad[7] / 100
-        print("{}}: {}".format(k, loss))
+        print("{}: {}".format(k, loss))
+        losses.append(loss)
         mlp.w1 -= lr * dw1
         mlp.w2 -= lr * dw2
         mlp.w3 -= lr * dw3
@@ -83,6 +85,7 @@ def train(mlp: MLP, epochs, lr, inputs, labels):
         mlp.b2 -= lr * db2
         mlp.b3 -= lr * db3
         mlp.b4 -= lr * db4
+    return losses
 
 
 if __name__ == "__main__":
@@ -96,10 +99,10 @@ if __name__ == "__main__":
     labels = np.eye(4)[np.random.randint(0, 4, size=(1, 100))].reshape(100, 4)
 
     # 训练
-    # train(mlp, 1000, 0.5, inputs, labels)
-    # train(mlp, 100, 1, inputs, labels)
-    train(mlp, 1000, 0.5, inputs, labels)
-    train(mlp, 500, 0.1, inputs, labels)
-    train(mlp, 500, 0.05, inputs, labels)
-    train(mlp, 1000, 0.01, inputs, labels)
-
+    loss = []
+    loss += train(mlp, 1000, 0.5, inputs, labels)
+    loss += train(mlp, 1000, 0.4, inputs, labels)
+    loss += train(mlp, 1000, 0.2, inputs, labels)
+    loss += train(mlp, 1500, 0.1, inputs, labels)
+    plt.plot(loss)
+    plt.show()

@@ -33,7 +33,7 @@ class SupportVectorMachine:
         size = np.size(train_label)
         alpha = cp.Variable(size)
         constraint = [
-            alpha <= 1,
+            alpha <= self.C,
             alpha >= 0,
             alpha.T @ train_label == 0,
         ]
@@ -53,7 +53,7 @@ class SupportVectorMachine:
         prob = cp.Problem(obj, constraint)
         prob.solve(solver=cp.ECOS, verbose=False)
         for i in range(size):
-            if alpha.value[i] > self.epsilon:
+            if alpha.value[i] > self.epsilon and alpha.value[i] < self.C:
                 self.sv.append(train_data[i])
                 self.sv_alpha.append(alpha.value[i])
                 self.sv_label.append(train_label[i])

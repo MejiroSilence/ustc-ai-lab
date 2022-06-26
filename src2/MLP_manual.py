@@ -1,7 +1,14 @@
+# UTF-8
 import torch
 import numpy as np
 from matplotlib import pyplot as plt
 import math
+
+# pytorch (没有在手动运算梯度中调用，用于实验报告中要求的与pytorch手动求导的对比)
+import torchvision
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import transforms
 
 
 def softmax(x):
@@ -51,9 +58,22 @@ class MLP:
         return [dw1, dw2, dw3, dw4, db1, db2, db3, db4]
 
 
-def train(mlp: MLP, epochs, lr, inputs, labels):
+def train(mlp: MLP, epochs, lr, inputs, labels, net):
     losses = []
+    tl = []
+    optimizer = optim.SGD(net.parameters(), lr=lr)
+    loss_function = nn.CrossEntropyLoss()
+    tensorInput = torch.as_tensor(inputs, dtype=torch.float32)
+    tensorLabels = torch.as_tensor(labels)
+    _, torchlabels = torch.max(tensorLabels, 1)
     for k in range(epochs):
+        net.train()
+        optimizer.zero_grad()
+        outputs = net.forward(tensorInput)
+        torchLoss = loss_function(outputs, torchlabels)
+        torchLoss.backward()
+        optimizer.step()
+
         dw1 = np.zeros((10, 10))
         dw2 = np.zeros((8, 10))
         dw3 = np.zeros((8, 8))
@@ -75,8 +95,9 @@ def train(mlp: MLP, epochs, lr, inputs, labels):
             db2 += grad[5] / 100
             db3 += grad[6] / 100
             db4 += grad[7] / 100
-        print("{}: {}".format(k, loss))
+        print("{}: {}, {}".format(k, loss, torchLoss.item()))
         losses.append(loss)
+        tl.append(torchLoss.item())
         mlp.w1 -= lr * dw1
         mlp.w2 -= lr * dw2
         mlp.w3 -= lr * dw3
@@ -85,7 +106,24 @@ def train(mlp: MLP, epochs, lr, inputs, labels):
         mlp.b2 -= lr * db2
         mlp.b3 -= lr * db3
         mlp.b4 -= lr * db4
-    return losses
+    return [losses, tl]
+
+
+class MyNet(nn.Module):
+    def __init__(self):
+        super(MyNet, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(10, 10),
+            nn.Tanh(),
+            nn.Linear(10, 8),
+            nn.Tanh(),
+            nn.Linear(8, 8),
+            nn.Tanh(),
+            nn.Linear(8, 4),
+        )
+
+    def forward(self, x):
+        return self.fc(x)
 
 
 if __name__ == "__main__":
@@ -99,10 +137,22 @@ if __name__ == "__main__":
     labels = np.eye(4)[np.random.randint(0, 4, size=(1, 100))].reshape(100, 4)
 
     # 训练
+    net = MyNet()
     loss = []
-    loss += train(mlp, 1000, 0.5, inputs, labels)
-    loss += train(mlp, 1000, 0.4, inputs, labels)
-    loss += train(mlp, 1000, 0.2, inputs, labels)
-    loss += train(mlp, 1500, 0.1, inputs, labels)
-    plt.plot(loss)
+    tl = []
+    temp = train(mlp, 1000, 0.5, inputs, labels, net)
+    loss += temp[0]
+    tl += temp[1]
+    temp = train(mlp, 1000, 0.4, inputs, labels, net)
+    loss += temp[0]
+    tl += temp[1]
+    temp = train(mlp, 1000, 0.2, inputs, labels, net)
+    loss += temp[0]
+    tl += temp[1]
+    temp = train(mlp, 1500, 0.1, inputs, labels, net)
+    loss += temp[0]
+    tl += temp[1]
+    plt.plot(loss, label="manual")
+    plt.plot(tl, label="torch")
+    plt.legend()
     plt.show()

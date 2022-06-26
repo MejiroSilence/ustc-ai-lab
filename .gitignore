@@ -2,3 +2,4 @@ __pycache__/
 .vscode/
 *.pdf
 data/
+src2/MyNet.pth

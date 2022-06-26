@@ -99,9 +99,11 @@ class DecisionTree:
             node = self
             while node.decisionAttribute != -1:
                 if feature[node.decisionAttribute] in node.kids:
+                    # print(node.decisionAttribute, end="")
                     node = node.kids[feature[node.decisionAttribute]]
                 else:
                     break
+            # print()
             ans.append(node.label)
         return np.array(ans)
 
